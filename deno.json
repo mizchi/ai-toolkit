@@ -22,5 +22,6 @@
     ".": "./core/mod.ts",
     "./cli": "./cli/mod.ts",
     "./tools": "./tools/mod.ts"
-  }
+  },
+  "exclude": ["examples"]
 }
