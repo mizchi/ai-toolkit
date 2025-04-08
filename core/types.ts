@@ -1,5 +1,5 @@
-import type { CoreMessage, streamText } from "npm:ai";
-export type { TextStreamPart, Tool, ToolResult, CoreMessage } from "npm:ai";
+import type { CoreMessage, streamText } from "ai";
+export type { TextStreamPart, Tool, ToolResult, CoreMessage } from "ai";
 
 export type StreamOptions = Parameters<typeof streamText>[0];
 

@@ -11,9 +11,13 @@ import {
 } from "drizzle-orm/pg-core";
 import { drizzle } from "drizzle-orm/pglite";
 import { openai } from "@ai-sdk/openai";
-import { type CoreMessage, embed } from "ai";
+import { embed } from "ai";
 import { cosineDistance, sql, desc, gt, eq, asc } from "drizzle-orm";
-import type { Embedder, MemoryableStorageBackend } from "../core/types.ts";
+import type {
+  CoreMessage,
+  Embedder,
+  MemoryableStorageBackend,
+} from "../core/types.ts";
 
 const doc = pgTable(
   "doc",
