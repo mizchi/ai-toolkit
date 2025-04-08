@@ -1,6 +1,6 @@
 {
   "name": "@mizchi/ai-toolkit",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "nodeModulesDir": "auto",
   "tasks": {
     "dev": "deno run cli/mod.ts",
