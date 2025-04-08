@@ -1,5 +1,5 @@
 // https://orm.drizzle.team/docs/guides/vector-similarity-search
-import { PGlite } from "npm:@electric-sql/pglite";
+import { PGlite } from "@electric-sql/pglite";
 import { vector as pgVector } from "@electric-sql/pglite/vector";
 import { index, integer, pgTable, vector, text } from "drizzle-orm/pg-core";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";

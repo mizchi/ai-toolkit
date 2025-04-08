@@ -1,5 +1,5 @@
-import { jsonSchema, tool } from "npm:ai";
-import { extract, toMarkdown } from "npm:@mizchi/readability@0.5.0";
+import { jsonSchema, tool } from "ai";
+import { extract, toMarkdown } from "@mizchi/readability";
 
 export const readUrlTool = tool({
   description: "Read a URL and extract the text content",

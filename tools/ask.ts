@@ -1,4 +1,4 @@
-import { jsonSchema, tool } from "npm:ai";
+import { jsonSchema, tool } from "ai";
 
 export const askTool = tool({
   description: "Ask a question to the user. Call this for user input",

@@ -1,5 +1,5 @@
 import path from "node:path";
-import { jsonSchema, tool } from "npm:ai";
+import { jsonSchema, tool } from "ai";
 import { truncate } from "../core/utils.ts";
 
 export const readFileTool = tool({
