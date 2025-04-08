@@ -1,4 +1,4 @@
-import { jsonSchema, tool } from "npm:ai";
+import { jsonSchema, tool } from "ai";
 import { trimLines } from "../core/utils.ts";
 import type { VectorStore } from "../core/types.ts";
 
