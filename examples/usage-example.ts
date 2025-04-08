@@ -47,8 +47,6 @@ if (import.meta.main) {
     maxSteps: 20,
     maxTokens: 4096,
     toolChoice: "auto",
-
     // first message
-    prompt: "hello",
   });
 }

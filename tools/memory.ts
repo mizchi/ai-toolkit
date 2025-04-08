@@ -2,10 +2,11 @@ import { jsonSchema, tool } from "ai";
 import { trimLines } from "../core/utils.ts";
 import type { VectorStore } from "../core/types.ts";
 
-export const storageMemoryTool = (vectorStore: VectorStore) =>
+export const storeMemoryTool = (vectorStore: VectorStore) =>
   tool({
     description: trimLines(`
-      指定された内容をメモリを保存します。
+      指定された内容を VectorStore に保存します。
+      「記憶して」と指示された場合に使います。
     `),
     parameters: jsonSchema<{ title: string; content: string }>({
       type: "object",
@@ -32,7 +33,7 @@ export const storageMemoryTool = (vectorStore: VectorStore) =>
 export const searchMemoryTool = (vectorStore: VectorStore) =>
   tool({
     description: trimLines(`
-      storageMemoryTool で記憶したメモリを検索します。
+      storeMemoryTool で記憶したメモリを検索します。
     `),
     parameters: jsonSchema<{ query: string; threshold?: number }>({
       type: "object",

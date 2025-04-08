@@ -10,7 +10,7 @@ import { embed, type Tool } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { PGlite } from "@electric-sql/pglite";
 import { vector as pgVector } from "@electric-sql/pglite/vector";
-import { searchMemoryTool, storageMemoryTool } from "../tools/memory.ts";
+import { searchMemoryTool, storeMemoryTool } from "../tools/memory.ts";
 import { createPgliteBackend, initSchema } from "../backend/pglite.ts";
 
 const gitRoot = await $`git rev-parse --show-toplevel`
@@ -41,18 +41,17 @@ const embedder: Embedder = {
   dimensions: 1536,
 };
 
-async function loadBackend() {
-  const DB_PATH = path.join(Deno.cwd(), "data");
+async function loadBackend(dataDir?: string) {
   const pglite = new PGlite({
     extensions: { vector: pgVector },
-    dataDir: DB_PATH,
+    dataDir,
   });
   await initSchema(pglite, embedder);
   const backend = createPgliteBackend(pglite, embedder);
   return {
     backend,
     memoryTools: {
-      storageMemoryTool: storageMemoryTool(backend) as Tool,
+      storageMemoryTool: storeMemoryTool(backend) as Tool,
       searchMemoryTool: searchMemoryTool(backend) as Tool,
     },
   };
@@ -70,6 +69,7 @@ export async function run(args: string[] = Deno.args): Promise<void> {
       noBuiltin: { type: "boolean" },
       persist: { type: "string", short: "p" },
       oneshot: { type: "boolean", short: "o" },
+      dataDir: { type: "string" },
       tools: { type: "string", short: "t", multiple: true },
     },
     allowPositionals: true,
@@ -77,7 +77,14 @@ export async function run(args: string[] = Deno.args): Promise<void> {
   const modelName = parsed.values.modelName ?? (await selectModel());
   const debug = parsed.values.debug ?? false;
 
-  const { backend, memoryTools } = await loadBackend();
+  const dataDir = parsed.values.dataDir
+    ? path.join(Deno.cwd(), parsed.values.dataDir)
+    : path.join(
+        Deno.env.get("HOME") ?? Deno.env.get("HOME_PATH") ?? Deno.cwd(),
+        ".ai-toolkit"
+      );
+  await Deno.mkdir(dataDir, { recursive: true }).catch(console.error);
+  const { backend, memoryTools } = await loadBackend(dataDir);
 
   const tools = {
     ...BUILTIN_TOOLS,
