@@ -1,4 +1,4 @@
-import { streamText } from "npm:ai";
+import { streamText } from "ai";
 import { createMessenger } from "./messenger.ts";
 import type { Runtime, RunnerOptions, StreamOptions } from "./types.ts";
 import { handleStreamTextPart } from "../cli/output.ts";
