@@ -1,4 +1,5 @@
 import type { CoreMessage, streamText } from "npm:ai";
+import { initSchema } from "../backend/pglite.ts";
 export type { TextStreamPart, Tool, ToolResult, CoreMessage } from "npm:ai";
 
 export type StreamOptions = Parameters<typeof streamText>[0];
@@ -8,10 +9,8 @@ export type StreamOptions = Parameters<typeof streamText>[0];
  */
 export type Messenger = {
   get: () => CoreMessage[];
-  load: () => Promise<CoreMessage[]>;
-  reset: () => Promise<void>;
+  load: (id?: string) => Promise<CoreMessage[]>;
   add: (...messages: CoreMessage[]) => Promise<void>;
-  save: () => Promise<void>;
 };
 
 export type Runtime = {
@@ -48,4 +47,9 @@ export type VectorStore = {
 export type Embedder = {
   embed: (text: string) => Promise<number[]>;
   dimensions: number;
+};
+
+export type StorageBackend = {
+  load: (id?: string) => Promise<CoreMessage[]>;
+  add: (...messages: CoreMessage[]) => Promise<void>;
 };

@@ -1,6 +1,6 @@
 import { streamText } from "npm:ai";
 import { createMessenger } from "./messenger.ts";
-import { Runtime, RunnerOptions, StreamOptions } from "./types.ts";
+import type { Runtime, RunnerOptions, StreamOptions } from "./types.ts";
 import { handleStreamTextPart } from "../cli/output.ts";
 
 const denoRuntime: Runtime = {
@@ -23,7 +23,7 @@ export async function runTools(
   // Set signal handler
   Deno.addSignalListener("SIGINT", async () => {
     try {
-      await messenger.save();
+      // await messenger.save();
     } finally {
       Deno.exit(0);
     }
@@ -38,8 +38,7 @@ export async function runTools(
         handleStreamTextPart(part, runtime, debug);
       }
       const response = await stream.response;
-      messenger.add(...response.messages);
-      await messenger.save();
+      await messenger.add(...response.messages);
       runtime.write("\n\n");
     }
     if (oneshot) {
