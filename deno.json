@@ -6,6 +6,7 @@
     "dev": "deno run cli/mod.ts",
     "install-local": "deno install -Afg cli/mod.ts --name chat --config deno.json"
   },
+  "license": "MIT",
   "imports": {
     "@ai-sdk/anthropic": "npm:@ai-sdk/anthropic@^1.2.7",
     "@ai-sdk/deepseek": "npm:@ai-sdk/deepseek@^0.2.7",
