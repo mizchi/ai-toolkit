@@ -22,7 +22,7 @@ export const storageMemoryTool = (vectorStore: VectorStore) =>
       required: ["title", "content"],
     }),
     async execute({ title, content }) {
-      await vectorStore.insert({
+      await vectorStore.insertMemory({
         title: title,
         content: content,
       });
@@ -49,7 +49,7 @@ export const searchMemoryTool = (vectorStore: VectorStore) =>
       required: ["query"],
     }),
     async execute({ query, threshold }) {
-      const result = await vectorStore.query(query, {
+      const result = await vectorStore.queryMemory(query, {
         threshold,
       });
       if (result.length === 0) {

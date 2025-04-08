@@ -1,5 +1,5 @@
 // WIP
-import { CoreMessage } from "../core/types.ts";
+import type { CoreMessage, StorageBackend } from "../core/types.ts";
 import { DatabaseSync, type DatabaseSyncOptions } from "node:sqlite";
 
 const sql = (strings: TemplateStringsArray, ...values: unknown[]) => {
@@ -10,7 +10,6 @@ const sql = (strings: TemplateStringsArray, ...values: unknown[]) => {
     .trim();
 };
 
-// WIP
 export function sqliteBackend(dbPath: string, opts: DatabaseSyncOptions = {}) {
   const db = new DatabaseSync(dbPath, opts);
   db.exec(sql`
@@ -30,16 +29,21 @@ export function sqliteBackend(dbPath: string, opts: DatabaseSyncOptions = {}) {
   `);
   let currentChatId: number | undefined = undefined;
   let _messages: CoreMessage[] = [];
-  const backend = {
-    async init(id: string) {
-      // ensure
+  const backend: StorageBackend = {
+    async loadMessages(id) {
+      if (!currentChatId) {
+        return _messages;
+      }
+      if (id) {
+        currentChatId = parseInt(id);
+      }
       const ret = db
         .prepare(
           sql`
           SELECT id FROM chat WHERE id = ?
         `
         )
-        .get(id) as { id: number } | undefined;
+        .get(currentChatId) as { id: number } | undefined;
       if (ret) {
         currentChatId = ret.id;
         const rows = db
@@ -48,11 +52,12 @@ export function sqliteBackend(dbPath: string, opts: DatabaseSyncOptions = {}) {
             SELECT * FROM message WHERE chat_id = ? ORDER BY created_at ASC
           `
           )
-          .all(id) as { role: string; content: string }[];
+          .all(currentChatId) as { role: string; content: string }[];
         _messages = rows.map((row) => ({
           role: row.role,
           content: JSON.parse(row.content),
         })) as CoreMessage[];
+        return _messages;
       } else {
         const newChat = db
           .prepare(
@@ -63,12 +68,10 @@ export function sqliteBackend(dbPath: string, opts: DatabaseSyncOptions = {}) {
           .get() as { id: number };
         currentChatId = newChat.id;
         _messages = [];
+        return _messages;
       }
     },
-    load: async () => {
-      return _messages;
-    },
-    save: async (messages: CoreMessage[]) => {
+    async addMessage(...messages) {
       if (currentChatId === undefined) {
         throw new Error("Chat ID is not set");
       }

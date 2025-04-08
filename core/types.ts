@@ -1,5 +1,4 @@
 import type { CoreMessage, streamText } from "npm:ai";
-import { initSchema } from "../backend/pglite.ts";
 export type { TextStreamPart, Tool, ToolResult, CoreMessage } from "npm:ai";
 
 export type StreamOptions = Parameters<typeof streamText>[0];
@@ -33,9 +32,14 @@ export type MemoryDoc = {
   title?: string;
 };
 
+export type Embedder = {
+  embed: (text: string) => Promise<number[]>;
+  dimensions: number;
+};
+
 export type VectorStore = {
-  insert(data: { title?: string; content: string }): Promise<number>;
-  query: (
+  insertMemory: (doc: { title?: string; content: string }) => Promise<void>;
+  queryMemory: (
     query: string,
     opts?: {
       threshold?: number;
@@ -44,12 +48,9 @@ export type VectorStore = {
   ) => Promise<MemoryDoc[]>;
 };
 
-export type Embedder = {
-  embed: (text: string) => Promise<number[]>;
-  dimensions: number;
+export type StorageBackend = {
+  loadMessages: (id?: string) => Promise<CoreMessage[]>;
+  addMessage: (...messages: CoreMessage[]) => Promise<void>;
 };
 
-export type StorageBackend = {
-  load: (id?: string) => Promise<CoreMessage[]>;
-  add: (...messages: CoreMessage[]) => Promise<void>;
-};
+export type MemoryableStorageBackend = StorageBackend & VectorStore;

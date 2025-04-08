@@ -2,13 +2,7 @@ import { parseArgs } from "node:util";
 import path from "node:path";
 import { loadModelByName, selectModel } from "./model.ts";
 import { trimLines } from "../core/utils.ts";
-import {
-  createMessenger,
-  fsBackend,
-  inMemoryBackend,
-  runTools,
-  type StreamOptions,
-} from "../core/mod.ts";
+import { createMessenger, runTools } from "../core/mod.ts";
 import { BUILTIN_TOOLS } from "../tools/mod.ts";
 import $ from "@david/dax";
 import type { Embedder } from "../core/types.ts";
@@ -17,11 +11,7 @@ import { openai } from "@ai-sdk/openai";
 import { PGlite } from "@electric-sql/pglite";
 import { vector as pgVector } from "@electric-sql/pglite/vector";
 import { searchMemoryTool, storageMemoryTool } from "../tools/memory.ts";
-import {
-  createPgliteVectorStore,
-  createPgliteMessenger,
-  initSchema,
-} from "../backend/pglite.ts";
+import { createPgliteBackend, initSchema } from "../backend/pglite.ts";
 
 const gitRoot = await $`git rev-parse --show-toplevel`
   .stdout("piped")
@@ -51,22 +41,21 @@ const embedder: Embedder = {
   dimensions: 1536,
 };
 
-async function createMemoryTools(pglite: PGlite) {
-  await pglite.exec("CREATE EXTENSION IF NOT EXISTS vector;");
-  await pglite.exec(/*sql*/ `
-    CREATE TABLE IF NOT EXISTS doc (
-      id SERIAL PRIMARY KEY,
-      title TEXT,
-      content TEXT NOT NULL,
-      embedding vector(${embedder.dimensions})
-    );
-  `);
-
-  const vectorStore = createPgliteVectorStore(pglite, embedder);
+async function loadBackend() {
+  const DB_PATH = path.join(Deno.cwd(), "data");
+  const pglite = new PGlite({
+    extensions: { vector: pgVector },
+    dataDir: DB_PATH,
+  });
+  await initSchema(pglite, embedder);
+  const backend = createPgliteBackend(pglite, embedder);
   return {
-    storageMemoryTool: storageMemoryTool(vectorStore) as Tool,
-    searchMemoryTool: searchMemoryTool(vectorStore) as Tool,
-  } as const;
+    backend,
+    memoryTools: {
+      storageMemoryTool: storageMemoryTool(backend) as Tool,
+      searchMemoryTool: searchMemoryTool(backend) as Tool,
+    },
+  };
 }
 
 export async function run(args: string[] = Deno.args): Promise<void> {
@@ -87,23 +76,18 @@ export async function run(args: string[] = Deno.args): Promise<void> {
   });
   const modelName = parsed.values.modelName ?? (await selectModel());
   const debug = parsed.values.debug ?? false;
-  // const backend = createPgliteMessenger(
-  // parsed.values.persist
-  // const backend = parsed.values.persist
-  //   ? fsBackend(path.join(Deno.cwd(), parsed.values.persist))
-  //   : inMemoryBackend();
 
-  const DB_PATH = path.join(Deno.cwd(), "data");
-  const pglite = new PGlite({
-    extensions: { vector: pgVector },
-    dataDir: DB_PATH,
-  });
-  await initSchema(pglite, embedder);
+  const { backend, memoryTools } = await loadBackend();
 
-  const backend = createPgliteMessenger(pglite);
+  const tools = {
+    ...BUILTIN_TOOLS,
+    ...memoryTools,
+  };
   const messenger = createMessenger(backend);
   // TODO: persist id
   await messenger.load();
+
+  // setup initial messages
   const firstMessage = parsed.positionals.join(" ");
   if (firstMessage) {
     await messenger.add({
@@ -111,11 +95,6 @@ export async function run(args: string[] = Deno.args): Promise<void> {
       content: firstMessage,
     });
   }
-
-  const tools = {
-    ...BUILTIN_TOOLS,
-    ...(await createMemoryTools(pglite)),
-  };
 
   if (debug) {
     console.log("[options]", parsed.values);

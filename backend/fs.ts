@@ -2,7 +2,7 @@ import { StorageBackend } from "../core/types.ts";
 
 export function fsBackend(savePath: string): StorageBackend {
   return {
-    async load(id) {
+    async loadMessages(id) {
       if (!id) {
         return [];
       }
@@ -14,7 +14,7 @@ export function fsBackend(savePath: string): StorageBackend {
         return [];
       }
     },
-    async add(...messages) {
+    async addMessage(...messages) {
       try {
         await Deno.writeTextFile(savePath, JSON.stringify(messages, null, 2));
       } catch (e) {

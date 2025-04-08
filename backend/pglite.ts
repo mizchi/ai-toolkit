@@ -13,9 +13,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { openai } from "@ai-sdk/openai";
 import { type CoreMessage, embed } from "ai";
 import { cosineDistance, sql, desc, gt, eq, asc } from "drizzle-orm";
-import type { Embedder, StorageBackend, VectorStore } from "../core/types.ts";
-
-// schema
+import type { Embedder, MemoryableStorageBackend } from "../core/types.ts";
 
 const doc = pgTable(
   "doc",
@@ -86,11 +84,11 @@ export async function initSchema(pglite: PGlite, embedder: Embedder) {
   `);
 }
 
-export const createPgliteMessenger = (pglite: PGlite) => {
+export const createPgliteBackend = (pglite: PGlite, embedder: Embedder) => {
   const db = drizzle(pglite);
   let _currentChatId: number | undefined = undefined;
   return {
-    async load(id) {
+    async loadMessages(id) {
       if (!id) {
         const chatId = await db.insert(chat).values({}).returning({
           id: chat.id,
@@ -122,7 +120,7 @@ export const createPgliteMessenger = (pglite: PGlite) => {
         content: JSON.parse(row.content),
       })) as CoreMessage[];
     },
-    async add(...messages) {
+    async addMessage(...messages) {
       for (const message of messages) {
         await db.insert(schema.message).values({
           chatId: _currentChatId!,
@@ -131,16 +129,7 @@ export const createPgliteMessenger = (pglite: PGlite) => {
         });
       }
     },
-  } as StorageBackend;
-};
-
-export const createPgliteVectorStore = (pglite: PGlite, embedder: Embedder) => {
-  const db = drizzle({
-    client: pglite,
-    schema: schema,
-  });
-  return {
-    insert: async (data: { title?: string; content: string }) => {
+    insertMemory: async (data) => {
       const embedding = await embedder.embed(data.content);
       const inserted = await db
         .insert(doc)
@@ -152,9 +141,10 @@ export const createPgliteVectorStore = (pglite: PGlite, embedder: Embedder) => {
         .returning({
           id: doc.id,
         });
-      return inserted.at(0)!.id;
+      return;
+      // return inserted.at(0)!.id;
     },
-    async query(query, opts = {}) {
+    async queryMemory(query, opts = {}) {
       const embedding = await embedder.embed(query);
       const similarity = sql<number>`1 - (${cosineDistance(
         doc.embedding,
@@ -171,7 +161,7 @@ export const createPgliteVectorStore = (pglite: PGlite, embedder: Embedder) => {
         .orderBy((t) => desc(t.similarity))
         .limit(opts.limit ?? 5);
     },
-  } as VectorStore;
+  } as MemoryableStorageBackend;
 };
 
 if (import.meta.main) {
@@ -199,15 +189,15 @@ if (import.meta.main) {
   );
 `);
 
-  const vectorStore = createPgliteVectorStore(pglite, embedder);
+  const vectorStore = createPgliteBackend(pglite, embedder);
   // run
   const seedData = ["hello world", "green tea", "black"];
   for (const data of seedData) {
-    await vectorStore.insert({
+    await vectorStore.insertMemory({
       content: data,
     });
   }
   // search
-  const result = await vectorStore.query("black");
+  const result = await vectorStore.queryMemory?.("black");
   console.log(result);
 }

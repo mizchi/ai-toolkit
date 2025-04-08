@@ -10,12 +10,12 @@ export function createMessenger(
       return Array.from(_messages);
     },
     async load(id): Promise<CoreMessage[]> {
-      _messages = await backend.load(id);
+      _messages = await backend.loadMessages(id);
       return _messages;
     },
     async add(...messages: CoreMessage[]) {
       _messages.push(...messages);
-      await backend.add(...messages);
+      await backend.addMessage(...messages);
     },
   };
 }
