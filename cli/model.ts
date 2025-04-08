@@ -1,6 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { google } from "@ai-sdk/google";
 import { deepseek } from "@ai-sdk/deepseek";
+import $ from "@david/dax";
 
 // getModelByName 関数をここに定義
 export function loadModelByName<
@@ -28,4 +29,18 @@ export function loadModelByName<
     return deepseek(model, settings);
   }
   throw new Error(`Model ${model} not supported`);
+}
+
+const MODELS = [
+  "claude-3-7-sonnet-20250219",
+  "gemini-2.5-pro-exp-03-25",
+  "deepseek-chat",
+];
+
+export async function selectModel(): Promise<string> {
+  const index = await $.select({
+    message: "Select model",
+    options: MODELS,
+  });
+  return MODELS[index];
 }

@@ -26,3 +26,26 @@ export type RunnerOptions = {
   oneshot?: boolean;
   runtime?: Runtime;
 };
+
+export type MemoryDoc = {
+  id: number;
+  similarity: number;
+  content: string;
+  title?: string;
+};
+
+export type VectorStore = {
+  insert(data: { title?: string; content: string }): Promise<number>;
+  query: (
+    query: string,
+    opts?: {
+      threshold?: number;
+      limit?: number;
+    }
+  ) => Promise<MemoryDoc[]>;
+};
+
+export type Embedder = {
+  embed: (text: string) => Promise<number[]>;
+  dimensions: number;
+};

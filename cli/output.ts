@@ -1,6 +1,10 @@
-import type { TextStreamPart, Tool, ToolResult } from "npm:ai";
+import type {
+  Runtime,
+  TextStreamPart,
+  Tool,
+  ToolResult,
+} from "../core/types.ts";
 import { truncate } from "../core/utils.ts";
-import { Runtime } from "../core/types.ts";
 
 export function handleStreamTextPart(
   part: TextStreamPart<Record<string, Tool>>,

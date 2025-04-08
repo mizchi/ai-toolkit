@@ -6,8 +6,11 @@ export function trimLines(str: string) {
     .filter((line) => line !== "")
     .join("\n");
 }
-export function truncate(input: unknown, length: number = 100) {
+export function truncate(input: unknown, maxLength: number = 100) {
+  if (input == null) {
+    return "";
+  }
   const str =
     typeof input === "string" ? input : JSON.stringify(input, null, 2);
-  return str.length > length ? str.slice(0, length) + "..." : str;
+  return str.length > maxLength ? str.slice(0, maxLength) + "..." : str;
 }
