@@ -19,7 +19,7 @@
     "drizzle-orm": "npm:drizzle-orm@^0.41.0"
   },
   "exports": {
-    ".": "./mod.ts",
+    ".": "./core/mod.ts",
     "./cli": "./cli/mod.ts",
     "./tools": "./tools/mod.ts"
   }
